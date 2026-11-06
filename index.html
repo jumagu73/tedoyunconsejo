@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tira-Consejos</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; background: #0f172a; color: #e2e8f0; }
+  h1 { color: #34d399; }
+  textarea { width: 100%; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; }
+  button { margin-top: 12px; padding: 12px 20px; font-size: 16px; border: none; border-radius: 8px; background: #34d399; color: #0f172a; font-weight: bold; cursor: pointer; }
+  button:hover { opacity: 0.9; }
+  #result { margin-top: 20px; padding: 16px; border-radius: 8px; background: #1e293b; border: 1px dashed #334155; font-size: 17px; min-height: 24px; display: none; }
+  #result.show { display: block; }
+</style>
+</head>
+<body>
+  <h1>💡 Tira-Consejos</h1>
+  <p>Contame algo y te tiro un consejo para la vida.</p>
+
+  <textarea id="input" rows="4" placeholder="Ej: no sé si renunciar a mi trabajo..."></textarea>
+  <br>
+  <button id="btn">Tirar consejo</button>
+
+  <div id="result"></div>
+
+  <script>
+    // Normaliza: pasa a minúsculas y quita acentos
+    function normalizar(texto) {
+      return texto.toLowerCase()
+        .replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
+        .replace(/ó/g, "o").replace(/ú/g, "u").replace(/ñ/g, "n");
+    }
+
+    // Cada tema tiene palabras clave (separadas por comas) y una lista de consejos
+    var temas = [
+      {
+        claves: ["trabajo", "empleo", "jefe", "renunciar", "empresa", "laboral"],
+        consejos: [
+          "Antes de renunciar, escribí qué te quita el sueño del trabajo y qué te lo da. Si lo segundo no existe, es señal.",
+          "Ningún trabajo vale más que tu salud. Pero ninguna decisión importante se toma en caliente: esperá 48 horas.",
+          "Si el trabajo te chupa la vida, no es un trabajo: es una relación tóxica con sueldo.",
+          "No renuncies por un mal día. Renunciá cuando lleves meses sintiendo que te apagás al entrar."
+        ]
+      },
+      {
+        claves: ["familia", "madre", "padre", "hermano", "hermana", "hijo", "hija", "mama", "papa"],
+        consejos: [
+          "Con la familia no se gana discutiendo, se gana escuchando.",
+          "Poné límites con amor: no es egoísmo, es supervivencia emocional.",
+          "No todas las heridas familiares se curan con una charla. Algunas se curan con distancia y tiempo.",
+          "Antes de responder en una pelea familiar, respirá tres veces."
+        ]
+      },
+      {
+        claves: ["examen", "estudiar", "facultad", "universidad", "prueba", "parcial", "final", "colegio"],
+        consejos: [
+          "Estudiá en bloques de 25 minutos con 5 de descanso. Tu cerebro aprende más descansando.",
+          "No estudies para aprobar: estudiá para entender.",
+          "El día antes del examen, dormí. Un cerebro descansado rinde más.",
+          "Si te va mal, no es el fin: es información. ¿Qué falló?"
+        ]
+      },
+      {
+        claves: ["amor", "pareja", "novio", "novia", "relacion", "corazon", "ex"],
+        consejos: [
+          "Si tenés que convencerte de que está bien, no está bien.",
+          "El amor no debería doler todo el tiempo.",
+          "No vuelvas con un ex solo porque extrañás la idea que tenías de esa persona.",
+          "Antes de exigir en una relación, preguntate si vos estás dando lo mismo."
+        ]
+      },
+      {
+        claves: ["ansiedad", "nervios", "estres", "miedo", "panico", "angustia", "preocupado"],
+        consejos: [
+          "La ansiedad es tu cerebro intentando protegerte de algo que todavía no pasó.",
+          "Respirá 4 segundos, sostené 4, soltá 6. Repetilo 5 veces.",
+          "Escribí lo que te preocupa. El 80% se ve más chico en papel que en la cabeza.",
+          "No tenés que resolver todo hoy. A veces alcanza con sobrevivir el día."
+        ]
+      },
+      {
+        claves: ["triste", "deprimido", "solo", "sola", "vacio", "bajon", "mal"],
+        consejos: [
+          "No estás solo aunque lo sientas. Pedir ayuda es de valientes.",
+          "La tristeza no se cura apurándola. A veces hay que sentarse con ella un rato.",
+          "Salí a caminar 10 minutos. No resuelve la vida, pero mueve algo adentro.",
+          "Los días malos no son la vida entera. Son días."
+        ]
+      },
+      {
+        claves: ["plata", "dinero", "deuda", "rico", "pobre", "sueldo", "ahorrar"],
+        consejos: [
+          "No gastes para impresionar a gente que ni te mira.",
+          "Antes de comprar algo, esperá 72 horas.",
+          "El dinero no compra la felicidad, pero compra tranquilidad.",
+          "Si estás endeudado, ordená: primero lo urgente, después lo importante."
+        ]
+      },
+      {
+        claves: ["amigo", "amistad", "amigos"],
+        consejos: [
+          "Los amigos no se cuentan, se sienten.",
+          "Ser buen amigo a veces es decir lo que el otro no quiere escuchar.",
+          "Si un amigo te busca solo cuando necesita algo, revisá."
+        ]
+      },
+      {
+        claves: ["decision", "decidir", "elegir", "duda", "no se"],
+        consejos: [
+          "Elegí la opción que te deje más paz.",
+          "Preguntate: ¿qué haría la versión de mí que quiero ser dentro de 5 años?",
+          "No existe la decisión perfecta. Existe la que tomás y hacés que funcione.",
+          "Escribí pros y contras, pero al final escuchá a tu estómago."
+        ]
+      },
+      {
+        claves: ["cuerpo", "salud", "dieta", "ejercicio", "gordo", "flaco", "peso"],
+        consejos: [
+          "Tu cuerpo no es un proyecto a corregir: es la casa donde vivís.",
+          "No hagas dietas que no podrías sostener en 10 años.",
+          "Movete porque te hace bien, no para castigar lo que comiste.",
+          "El mejor ejercicio es el que hacés."
+        ]
+      },
+      {
+        claves: ["tiempo", "procrastinar", "vago", "pereza"],
+        consejos: [
+          "Empezá con 2 minutos. La mayoría de las veces, después seguís.",
+          "La motivación viene después de empezar, no antes.",
+          "Si algo te da miedo, hacelo con miedo. Pero hacelo.",
+          "Dividí la tarea grande en la más chiquita posible."
+        ]
+      }
+    ];
+
+    var generales = [
+      "No tomes decisiones importantes con hambre, con sueño o con enojo.",
+      "Si algo te hace bien, repetilo. Si algo te hace mal, alejate.",
+      "Hablá menos de lo que querés hacer y hacé más de lo que hablás.",
+      "La vida es demasiado corta para pasar tiempo con gente que te hace sentir menos.",
+      "El silencio también es una respuesta. Y a veces la más sabia.",
+      "Aprendé a decir 'no' sin culpa.",
+      "No esperes el momento perfecto: existe el momento en que te animás.",
+      "Si estás pasando por un mal momento, recordá: esto también va a pasar.",
+      "Perdonar no es olvidar: es soltar el peso que no te deja avanzar.",
+      "La felicidad no es un destino, es la forma en que viajás.",
+      "Cuidá tu energía como cuidás tu plata.",
+      "A veces avanzar es soltar algo."
+    ];
+
+    function elegirAlAzar(lista) {
+      return lista[Math.floor(Math.random() * lista.length)];
+    }
+
+    function generarConsejo(texto) {
+      var t = normalizar(texto);
+      var temasCoincidentes = [];
+
+      for (var i = 0; i < temas.length; i++) {
+        for (var j = 0; j < temas[i].claves.length; j++) {
+          if (t.indexOf(temas[i].claves[j]) !== -1) {
+            temasCoincidentes.push(temas[i]);
+            break;
+          }
+        }
+      }
+
+      if (temasCoincidentes.length > 0) {
+        var tema = elegirAlAzar(temasCoincidentes);
+        return elegirAlAzar(tema.consejos);
+      }
+      return elegirAlAzar(generales);
+    }
+
+    var boton = document.getElementById("btn");
+    var entrada = document.getElementById("input");
+    var salida = document.getElementById("result");
+
+    boton.onclick = function () {
+      var texto = entrada.value.trim();
+      if (texto === "") {
+        salida.textContent = "Escribí algo primero, aunque sea una palabra.";
+      } else {
+        salida.textContent = "💡 " + generarConsejo(texto);
+      }
+      salida.className = "show";
+    };
+  </script>
+</body>
+</html>
